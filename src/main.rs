@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Read;
 
 mod decoder;
+mod instruction;
 
 fn main() {
     let rom = env::args().nth(1).expect("No ROM file passed as argument!");
@@ -19,7 +20,9 @@ fn main() {
         if word.len() == 2 {
             let instr: u16 = u16::from_be_bytes([word[0], word[1]]);
 
-            decoder::decode(instr);
+            if let Some(i) = decoder::decode(instr) {
+                println!("{:?}", i);
+            }
         } else {
             println!("[+] ingoring malformed instruction {:x?}", word);
         }
