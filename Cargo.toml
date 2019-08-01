@@ -1,5 +1,5 @@
 [package]
-name = "chip8-emu"
+name = "chip8-remu"
 version = "0.1.0"
 authors = ["johannst <johannes.stoelp@gmail.com>"]
 edition = "2018"
