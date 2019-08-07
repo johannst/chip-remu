@@ -1,6 +1,6 @@
 ## Chip8 emulator in rust
 
-This is a Chip8 emulator I am going to write in rust in my sparse time.
+This is a Chip8 emulator I am going to write in rust in my spare time.
 
 ### Reference
 
