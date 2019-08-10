@@ -185,8 +185,8 @@ pub fn decode(bytes: u16) -> Option<Instruction> {
     {
         Some(InstructionCode { opcode, mask: _ }) => {
             // field access helper
-            let vx = (bytes & 0x0f00 >> 8) as u8;
-            let vy = (bytes & 0x00f0 >> 4) as u8;
+            let vx = ((bytes & 0x0f00) >> 8) as u8;
+            let vy = ((bytes & 0x00f0) >> 4) as u8;
             let nnn = bytes & 0x0fff;
             let nn = (bytes & 0x00ff) as u8;
             let n = (bytes & 0x000f) as u8;
@@ -235,5 +235,76 @@ pub fn decode(bytes: u16) -> Option<Instruction> {
             eprintln!("Failed to decode, unknown instruction (0x{:04x})", bytes);
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod unittest {
+    use super::*;
+
+    #[test]
+    fn testNoArgInstr() {
+        assert_eq!(Some(Instruction::ClearDisplay), decode(0x00e0));
+        assert_eq!(Some(Instruction::Return), decode(0x00ee));
+    }
+
+    #[test]
+    fn testAddrInstr() {
+        assert_eq!(Some(Instruction::Jump(0x123)), decode(0x1123));
+        assert_eq!(Some(Instruction::Call(0xabc)), decode(0x2abc));
+        assert_eq!(Some(Instruction::LoadIAddr(0x777)), decode(0xa777));
+        assert_eq!(Some(Instruction::JumpV0Addr(0x987)), decode(0xb987));
+    }
+
+    #[test]
+    fn testRegByteInstr() {
+        assert_eq!(Some(Instruction::SkipEqVxByte(1, 0xff)), decode(0x31ff));
+        assert_eq!(Some(Instruction::SkipNeqVxByte(2, 0xee)), decode(0x42ee));
+        assert_eq!(Some(Instruction::LoadVxByte(4, 0xcc)), decode(0x64cc));
+        assert_eq!(Some(Instruction::AddVxByte(5, 0xbb)), decode(0x75bb));
+        assert_eq!(Some(Instruction::RandVxAndByte(6, 0xaa)), decode(0xc6aa));
+    }
+
+    #[test]
+    fn testRegRegInstr() {
+        assert_eq!(Some(Instruction::SkipEqVxVy(1, 2)), decode(0x5120));
+        assert_eq!(Some(Instruction::LoadVxVy(1, 2)), decode(0x8120));
+        assert_eq!(Some(Instruction::OrVxVy(3, 4)), decode(0x8341));
+        assert_eq!(Some(Instruction::AndVxVy(3, 4)), decode(0x8342));
+        assert_eq!(Some(Instruction::XorVxVy(5, 6)), decode(0x8563));
+        assert_eq!(Some(Instruction::AddVxVy(5, 6)), decode(0x8564));
+        assert_eq!(Some(Instruction::SubVxVy(7, 8)), decode(0x8785));
+        assert_eq!(Some(Instruction::SubnVxVy(0xa, 0xa)), decode(0x8aa7));
+        assert_eq!(Some(Instruction::SkipNeqVxVy(0xf, 0xf)), decode(0x9ff0));
+    }
+
+    #[test]
+    fn testRegRegNibbleInstr() {
+        assert_eq!(
+            Some(Instruction::DisplaySpriteVxVyNibble(0xa, 0xb, 0xc)),
+            decode(0xdabc)
+        );
+    }
+
+    #[test]
+    fn testRegInstr() {
+        assert_eq!(Some(Instruction::ShrVxby1(0)), decode(0x8006));
+        assert_eq!(Some(Instruction::ShlVxby1(1)), decode(0x810e));
+        assert_eq!(Some(Instruction::SkipKeyPressedVx(2)), decode(0xe29e));
+        assert_eq!(Some(Instruction::SkipKeyNotPressedVx(3)), decode(0xe3a1));
+        assert_eq!(Some(Instruction::LoadVxDT(4)), decode(0xf407));
+        assert_eq!(Some(Instruction::LoadVxKey(5)), decode(0xf50a));
+        assert_eq!(Some(Instruction::LoadDTVx(6)), decode(0xf615));
+        assert_eq!(Some(Instruction::LoadSTVx(7)), decode(0xf718));
+        assert_eq!(Some(Instruction::AddIVx(8)), decode(0xf81e));
+        assert_eq!(Some(Instruction::LoadSpriteAddrVx(9)), decode(0xf929));
+        assert_eq!(Some(Instruction::LoadBVx(0xa)), decode(0xfa33));
+        assert_eq!(Some(Instruction::LoadRegsVx(0xb)), decode(0xfb55));
+        assert_eq!(Some(Instruction::StoreRegsVx(0xc)), decode(0xfc65));
+    }
+
+    #[test]
+    fn testUnknownInstr() {
+        assert_eq!(None, decode(0xf00d));
     }
 }
