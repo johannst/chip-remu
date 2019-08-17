@@ -1,3 +1,4 @@
+use super::instruction;
 use super::memory;
 
 const PROGRAM_START: u16 = 0x200;
@@ -24,7 +25,7 @@ impl Cpu {
         }
     }
 
-    pub fn load_rom(&self, mem: &mut memory::Memory, data : &[u8]) {
+    pub fn load_rom(&self, mem: &mut memory::Memory, data: &[u8]) {
         mem.load(PROGRAM_START, &data);
     }
 
@@ -32,7 +33,26 @@ impl Cpu {
         self.PC
     }
 
-    pub fn execute(&mut self, instruction: u16) {}
+    pub fn execute(&mut self, instr: instruction::Instruction) {
+        use instruction::Instruction::*;
+        self.PC += 2;
+        match instr {
+            LoadIAddr(addr) => {
+                self.I = addr;
+            }
+            RandVxAndByte(v, nn) => {
+                self.V[v as usize] = rand::random::<u8>() & nn;
+            }
+            SkipEqVxByte(v, nn) => {
+                if self.V[v as usize] == nn {
+                    self.PC += 2;
+                }
+            }
+            _ => {
+                unimplemented!();
+            }
+        }
+    }
 
     pub fn dump(&self) {
         println!("---- CPU state ----");
