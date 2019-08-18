@@ -185,8 +185,8 @@ pub fn decode(bytes: u16) -> Option<Instruction> {
     {
         Some(InstructionCode { opcode, mask: _ }) => {
             // field access helper
-            let vx = ((bytes & 0x0f00) >> 8) as u8;
-            let vy = ((bytes & 0x00f0) >> 4) as u8;
+            let vx = ((bytes & 0x0f00) >> 8) as usize;
+            let vy = ((bytes & 0x00f0) >> 4) as usize;
             let nnn = bytes & 0x0fff;
             let nn = (bytes & 0x00ff) as u8;
             let n = (bytes & 0x000f) as u8;
