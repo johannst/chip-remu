@@ -1,3 +1,4 @@
+use super::decoder;
 use super::instruction;
 use super::memory;
 
@@ -11,10 +12,13 @@ pub struct Cpu {
     ST: u8,
     PC: u16,
     SP: u8,
+    prev_PC: u16,
+
+    ram: memory::Memory,
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
+    pub fn new(ram: memory::Memory) -> Cpu {
         Cpu {
             V: [0; 16],
             I: 0x0000,
@@ -22,29 +26,45 @@ impl Cpu {
             ST: 0x00,
             PC: PROGRAM_START,
             SP: 0x00,
+            prev_PC: 0,
+            ram: ram,
         }
     }
 
-    pub fn load_rom(&self, mem: &mut memory::Memory, data: &[u8]) {
-        mem.load(PROGRAM_START, &data);
+    pub fn load_rom(&mut self, data: &[u8]) {
+        self.ram.load(PROGRAM_START, &data);
     }
 
     pub fn get_pc(&self) -> u16 {
         self.PC
     }
 
-    pub fn execute(&mut self, instr: instruction::Instruction) {
+    pub fn execute(&mut self) {
         use instruction::Instruction::*;
+
+        let instr = match decoder::decode(u16::from_be_bytes([
+            self.ram.read_byte(self.PC),
+            self.ram.read_byte(self.PC + 1),
+        ])) {
+            Some(instr) => instr,
+            None => panic!("UNKNOWN INSTRUCTION"),
+        };
+
+        if self.PC == self.prev_PC {
+            panic!("stuck!");
+        }
+        self.prev_PC = self.PC;
         self.PC += 2;
+
         match instr {
             LoadIAddr(addr) => {
                 self.I = addr;
             }
-            RandVxAndByte(v, nn) => {
-                self.V[v as usize] = rand::random::<u8>() & nn;
+            RandVxAndByte(v, byte) => {
+                self.V[v] = rand::random::<u8>() & byte;
             }
-            SkipEqVxByte(v, nn) => {
-                if self.V[v as usize] == nn {
+            SkipEqVxByte(v, byte) => {
+                if self.V[v] == byte {
                     self.PC += 2;
                 }
             }
