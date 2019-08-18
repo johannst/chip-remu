@@ -1,4 +1,5 @@
 use super::decoder;
+use super::gpu;
 use super::instruction;
 use super::memory;
 
@@ -15,10 +16,11 @@ pub struct Cpu {
     prev_PC: u16,
 
     ram: memory::Memory,
+    gpu: gpu::Gpu,
 }
 
 impl Cpu {
-    pub fn new(ram: memory::Memory) -> Cpu {
+    pub fn new(ram: memory::Memory, gpu: gpu::Gpu) -> Cpu {
         Cpu {
             V: [0; 16],
             I: 0x0000,
@@ -28,7 +30,12 @@ impl Cpu {
             SP: 0x00,
             prev_PC: 0,
             ram: ram,
+            gpu: gpu,
         }
+    }
+
+    pub fn get_fb(&self) -> &[bool] {
+        self.gpu.as_ref()
     }
 
     pub fn load_rom(&mut self, data: &[u8]) {
@@ -51,7 +58,7 @@ impl Cpu {
         };
 
         if self.PC == self.prev_PC {
-            panic!("stuck!");
+            return;
         }
         self.prev_PC = self.PC;
         self.PC += 2;
@@ -67,6 +74,28 @@ impl Cpu {
                 if self.V[v] == byte {
                     self.PC += 2;
                 }
+            }
+            DisplaySpriteVxVyNibble(vx, vy, nbytes) => {
+                let lines = nbytes as usize;
+                // TODO: get rid of copy (slice into memory)
+                let mut sprite = [0u8; 16];
+                for line in 0..lines {
+                    sprite[line] = self.ram.read_byte(self.I + line as u16);
+                }
+                self.V[15] = (self.gpu.write_sprite(
+                    self.V[vx] as usize,
+                    self.V[vy] as usize,
+                    &sprite[0..lines],
+                ) == gpu::Collision::Collision) as u8;
+            }
+            AddVxByte(v, byte) => {
+                self.V[v] += byte;
+            }
+            LoadVxByte(v, byte) => {
+                self.V[v] = byte;
+            }
+            Jump(addr) => {
+                self.PC = addr;
             }
             _ => {
                 unimplemented!();
