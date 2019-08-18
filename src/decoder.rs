@@ -243,13 +243,13 @@ mod unittest {
     use super::*;
 
     #[test]
-    fn testNoArgInstr() {
+    fn test_no_arg_instr() {
         assert_eq!(Some(Instruction::ClearDisplay), decode(0x00e0));
         assert_eq!(Some(Instruction::Return), decode(0x00ee));
     }
 
     #[test]
-    fn testAddrInstr() {
+    fn test_addr_instr() {
         assert_eq!(Some(Instruction::Jump(0x123)), decode(0x1123));
         assert_eq!(Some(Instruction::Call(0xabc)), decode(0x2abc));
         assert_eq!(Some(Instruction::LoadIAddr(0x777)), decode(0xa777));
@@ -257,7 +257,7 @@ mod unittest {
     }
 
     #[test]
-    fn testRegByteInstr() {
+    fn test_reg_byte_instr() {
         assert_eq!(Some(Instruction::SkipEqVxByte(1, 0xff)), decode(0x31ff));
         assert_eq!(Some(Instruction::SkipNeqVxByte(2, 0xee)), decode(0x42ee));
         assert_eq!(Some(Instruction::LoadVxByte(4, 0xcc)), decode(0x64cc));
@@ -266,7 +266,7 @@ mod unittest {
     }
 
     #[test]
-    fn testRegRegInstr() {
+    fn test_reg_reg_instr() {
         assert_eq!(Some(Instruction::SkipEqVxVy(1, 2)), decode(0x5120));
         assert_eq!(Some(Instruction::LoadVxVy(1, 2)), decode(0x8120));
         assert_eq!(Some(Instruction::OrVxVy(3, 4)), decode(0x8341));
@@ -279,7 +279,7 @@ mod unittest {
     }
 
     #[test]
-    fn testRegRegNibbleInstr() {
+    fn test_reg_reg_nibble_instr() {
         assert_eq!(
             Some(Instruction::DisplaySpriteVxVyNibble(0xa, 0xb, 0xc)),
             decode(0xdabc)
@@ -287,7 +287,7 @@ mod unittest {
     }
 
     #[test]
-    fn testRegInstr() {
+    fn test_reg_instr() {
         assert_eq!(Some(Instruction::ShrVxby1(0)), decode(0x8006));
         assert_eq!(Some(Instruction::ShlVxby1(1)), decode(0x810e));
         assert_eq!(Some(Instruction::SkipKeyPressedVx(2)), decode(0xe29e));
@@ -304,7 +304,7 @@ mod unittest {
     }
 
     #[test]
-    fn testUnknownInstr() {
+    fn test_unknown_nistr() {
         assert_eq!(None, decode(0xf00d));
     }
 }
