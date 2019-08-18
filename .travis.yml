@@ -1,2 +1,6 @@
 language: rust
 cache: cargo
+# for minibuf
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y libxcursor-dev
