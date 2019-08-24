@@ -225,8 +225,8 @@ pub fn decode(bytes: u16) -> Option<Instruction> {
                 0xf01e => AddIVx(vx),
                 0xf029 => LoadSpriteAddrVx(vx),
                 0xf033 => LoadBVx(vx),
-                0xf055 => LoadRegsVx(vx),
-                0xf065 => StoreRegsVx(vx),
+                0xf055 => StoreRegsVx(vx),
+                0xf065 => LoadRegsVx(vx),
                 _ => unreachable!(),
             };
             Some(instr)
@@ -299,8 +299,8 @@ mod unittest {
         assert_eq!(Some(Instruction::AddIVx(8)), decode(0xf81e));
         assert_eq!(Some(Instruction::LoadSpriteAddrVx(9)), decode(0xf929));
         assert_eq!(Some(Instruction::LoadBVx(0xa)), decode(0xfa33));
-        assert_eq!(Some(Instruction::LoadRegsVx(0xb)), decode(0xfb55));
-        assert_eq!(Some(Instruction::StoreRegsVx(0xc)), decode(0xfc65));
+        assert_eq!(Some(Instruction::StoreRegsVx(0xc)), decode(0xfc55));
+        assert_eq!(Some(Instruction::LoadRegsVx(0xb)), decode(0xfb65));
     }
 
     #[test]
