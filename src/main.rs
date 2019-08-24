@@ -24,7 +24,8 @@ fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
 }
 
 fn main() {
-    let rom_data = load_rom("./roms/demos/Maze_David_Winter_199x.ch8");
+    //let rom_data = load_rom("./roms/demos/Maze_David_Winter_199x.ch8");
+    let rom_data = load_rom("./roms/demos/Particle_Demo_zeroZshadow_2008.ch8");
 
     let mut cpu = cpu::Cpu::new(memory::Memory::new(), gpu::Gpu::new());
     cpu.load_rom(&rom_data);

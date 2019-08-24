@@ -14,10 +14,13 @@ impl Memory {
     }
 
     pub fn read_byte(&self, addr: u16) -> u8 {
-        if addr as usize > self.mem.len() {
-            return 0;
-        }
+        assert!(addr < (self.mem.len() as u16));
         self.mem[addr as usize]
+    }
+
+    pub fn write_byte(&mut self, addr: u16, data : u8) {
+        assert!(addr < (self.mem.len() as u16));
+        self.mem[addr as usize] = data;
     }
 
     pub fn dump_range(&self, addr: usize, size: usize) {

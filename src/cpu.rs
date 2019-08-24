@@ -12,7 +12,8 @@ pub struct Cpu {
     DT: u8,
     ST: u8,
     PC: u16,
-    SP: u8,
+    // stack is only used to push/pop PC on call/ret
+    SP: Vec<u16>,
     prev_PC: u16,
 
     ram: memory::Memory,
@@ -27,7 +28,7 @@ impl Cpu {
             DT: 0x00,
             ST: 0x00,
             PC: PROGRAM_START,
-            SP: 0x00,
+            SP: Vec::with_capacity(16),
             prev_PC: 0,
             ram: ram,
             gpu: gpu,
@@ -42,17 +43,12 @@ impl Cpu {
         self.ram.load(PROGRAM_START, &data);
     }
 
-    pub fn get_pc(&self) -> u16 {
-        self.PC
-    }
-
     pub fn execute(&mut self) {
         use instruction::Instruction::*;
 
-        let instr = match decoder::decode(u16::from_be_bytes([
-            self.ram.read_byte(self.PC),
-            self.ram.read_byte(self.PC + 1),
-        ])) {
+        let instr_raw =
+            u16::from_be_bytes([self.ram.read_byte(self.PC), self.ram.read_byte(self.PC + 1)]);
+        let instr = match decoder::decode(instr_raw) {
             Some(instr) => instr,
             None => panic!("UNKNOWN INSTRUCTION"),
         };
@@ -64,17 +60,92 @@ impl Cpu {
         self.PC += 2;
 
         match instr {
-            LoadIAddr(addr) => {
-                self.I = addr;
+            // ---- Flow Control ---- //
+            Return => {
+                if let Some(ret) = self.SP.pop() {
+                    self.PC = ret;
+                } else {
+                    panic!("BUG: cpu execute RET instruction while stack is empty!");
+                }
             }
-            RandVxAndByte(v, byte) => {
-                self.V[v] = rand::random::<u8>() & byte;
+            Jump(addr) => {
+                self.PC = addr;
+            }
+            Call(addr) => {
+                self.SP.push(self.PC);
+                self.PC = addr;
             }
             SkipEqVxByte(v, byte) => {
                 if self.V[v] == byte {
                     self.PC += 2;
                 }
             }
+            SkipEqVxVy(vx, vy) => {
+                if self.V[vx] == self.V[vy] {
+                    self.PC += 2;
+                }
+            }
+            SkipNeqVxByte(v, byte) => {
+                if self.V[v] != byte {
+                    self.PC += 2;
+                }
+            }
+
+            // ---- Load/Store ---- //
+            LoadVxByte(v, byte) => {
+                self.V[v] = byte;
+            }
+            LoadVxVy(vx, vy) => {
+                self.V[vx] = self.V[vy];
+            }
+            LoadIAddr(addr) => {
+                self.I = addr;
+            }
+            StoreRegsVx(v) => {
+                for vi in 0..v + 1 {
+                    self.ram.write_byte(self.I + vi as u16, self.V[vi]);
+                }
+            }
+            LoadRegsVx(v) => {
+                for vi in 0..v + 1 {
+                    self.V[vi] = self.ram.read_byte(self.I + vi as u16);
+                }
+            }
+
+            // ---- Arithmetic ---- //
+            AddVxByte(v, byte) => {
+                // this instruction does not set VF as carry
+                self.V[v] = self.V[v].wrapping_add(byte);
+            }
+            AddVxVy(vx, vy) => {
+                self.V[15] = (self.V[vy] > 255 - self.V[vx]) as u8; // VF as carry
+                self.V[vx] = self.V[vx].wrapping_add(self.V[vy]);
+            }
+            AddIVx(v) => {
+                self.I += self.V[v] as u16;
+            }
+
+            // ---- Bit Operations ---- ///
+            AndVxVy(vx, vy) => {
+                self.V[vx] &= self.V[vy];
+            }
+            ShlVxby1(v) => {
+                // VF = Vx[7]
+                self.V[15] = (self.V[v] & 0x80) as u8;
+                self.V[v] <<= 1;
+            }
+            ShrVxby1(v) => {
+                // VF = Vx[0]
+                self.V[15] = (self.V[v] & 0x01) as u8;
+                self.V[v] >>= 1;
+            }
+
+            // ---- Rand ----//
+            RandVxAndByte(v, byte) => {
+                self.V[v] = rand::random::<u8>() & byte;
+            }
+
+            // ---- Display ---- //
             DisplaySpriteVxVyNibble(vx, vy, nbytes) => {
                 let lines = nbytes as usize;
                 // TODO: get rid of copy (slice into memory)
@@ -88,16 +159,9 @@ impl Cpu {
                     &sprite[0..lines],
                 ) == gpu::Collision::Collision) as u8;
             }
-            AddVxByte(v, byte) => {
-                self.V[v] += byte;
-            }
-            LoadVxByte(v, byte) => {
-                self.V[v] = byte;
-            }
-            Jump(addr) => {
-                self.PC = addr;
-            }
+
             _ => {
+                println!("unimplemented instruction {:#x} {:?}", instr_raw, instr);
                 unimplemented!();
             }
         }
@@ -114,7 +178,7 @@ impl Cpu {
         println!("DT: {:02x}    ST: {:02x}", self.DT, self.ST);
         println!("I : {:04x}", self.I);
         println!("PC: {:04x}", self.PC);
-        println!("SP: {:02x}", self.SP);
+        //println!("SP: {:02x}", self.SP);
         println!("-------------------");
     }
 }
