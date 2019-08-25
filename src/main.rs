@@ -8,7 +8,6 @@ use std::path::Path;
 mod cpu;
 mod decoder;
 mod gpu;
-mod instruction;
 mod memory;
 
 fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {

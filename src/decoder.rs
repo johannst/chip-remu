@@ -1,4 +1,40 @@
-use super::instruction::Instruction;
+#[derive(PartialEq, Debug)]
+pub enum Instruction {
+    ClearDisplay,
+    Return,
+    Jump(u16),
+    JumpV0Addr(u16),
+    Call(u16),
+    SkipEqVxByte(usize, u8),
+    SkipEqVxVy(usize, usize),
+    SkipKeyPressedVx(usize),
+    SkipKeyNotPressedVx(usize),
+    SkipNeqVxByte(usize, u8),
+    SkipNeqVxVy(usize, usize),
+    LoadRegsVx(usize),
+    StoreRegsVx(usize),
+    LoadBVx(usize),
+    LoadDTVx(usize),
+    LoadIAddr(u16),
+    LoadSTVx(usize),
+    LoadSpriteAddrVx(usize),
+    LoadVxByte(usize, u8),
+    LoadVxDT(usize),
+    LoadVxKey(usize),
+    LoadVxVy(usize, usize),
+    AddIVx(usize),
+    AddVxByte(usize, u8),
+    AddVxVy(usize, usize),
+    SubVxVy(usize, usize),
+    SubnVxVy(usize, usize),
+    XorVxVy(usize, usize),
+    AndVxVy(usize, usize),
+    OrVxVy(usize, usize),
+    ShlVxby1(usize),
+    ShrVxby1(usize),
+    RandVxAndByte(usize, u8),
+    DisplaySpriteVxVyNibble(usize, usize, u8),
+}
 
 struct InstructionCode {
     opcode: u16,
@@ -178,18 +214,18 @@ const CHIP8_INSTRUCTIONS: [InstructionCode; 34] = [
     },
 ];
 
-pub fn decode(bytes: u16) -> Option<Instruction> {
+pub fn decode(instr: u16) -> Option<Instruction> {
     match CHIP8_INSTRUCTIONS
         .iter()
-        .find(|i| (bytes & i.mask) == i.opcode)
+        .find(|i| (instr & i.mask) == i.opcode)
     {
         Some(InstructionCode { opcode, mask: _ }) => {
             // field access helper
-            let vx = ((bytes & 0x0f00) >> 8) as usize;
-            let vy = ((bytes & 0x00f0) >> 4) as usize;
-            let nnn = bytes & 0x0fff;
-            let nn = (bytes & 0x00ff) as u8;
-            let n = (bytes & 0x000f) as u8;
+            let vx = ((instr & 0x0f00) >> 8) as usize;
+            let vy = ((instr & 0x00f0) >> 4) as usize;
+            let nnn = instr & 0x0fff;
+            let nn = (instr & 0x00ff) as u8;
+            let n = (instr & 0x000f) as u8;
 
             use Instruction::*;
             let instr = match opcode {
@@ -232,7 +268,7 @@ pub fn decode(bytes: u16) -> Option<Instruction> {
             Some(instr)
         }
         None => {
-            eprintln!("Failed to decode, unknown instruction (0x{:04x})", bytes);
+            eprintln!("Failed to decode, unknown instruction (0x{:04x})", instr);
             None
         }
     }

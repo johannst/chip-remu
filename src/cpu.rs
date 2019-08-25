@@ -1,6 +1,5 @@
 use super::decoder;
 use super::gpu;
-use super::instruction;
 use super::memory;
 
 const PROGRAM_START: u16 = 0x200;
@@ -44,7 +43,7 @@ impl Cpu {
     }
 
     pub fn execute(&mut self) {
-        use instruction::Instruction::*;
+        use decoder::Instruction::*;
 
         let instr_raw =
             u16::from_be_bytes([self.ram.read_byte(self.PC), self.ram.read_byte(self.PC + 1)]);
