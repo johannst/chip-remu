@@ -4,6 +4,7 @@ use minifb::{Key, Window, WindowOptions};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 mod cpu;
 mod decoder;
@@ -44,14 +45,34 @@ fn main() {
         panic!("{}", e);
     });
 
+    window.set_position(64, 64);
+
+    let mut f500hz_ref = Instant::now();
+    let mut f60hz_ref = Instant::now();
+    let mut f30hz_ref = Instant::now();
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        cpu.execute();
-        // expensive copy, could be cleaned up
-        let fb: Vec<u32> = cpu
-            .get_fb()
-            .iter()
-            .map(|&pixel| 0x00ffffff * pixel as u32)
-            .collect();
-        window.update_with_buffer(&fb).unwrap();
+        let now = Instant::now();
+
+        if (now - f500hz_ref) > Duration::from_millis(2) {
+            cpu.execute();
+            f500hz_ref = now;
+        }
+
+        if (now - f60hz_ref) > Duration::from_millis(16) {
+            // cpu timer tick
+            f60hz_ref = now;
+        }
+
+        if (now - f30hz_ref) > Duration::from_millis(32) {
+            f30hz_ref = now;
+            // expensive copy, could be cleaned up
+            let fb: Vec<u32> = cpu
+                .get_fb()
+                .iter()
+                .map(|&pixel| 0x00ffffff * pixel as u32)
+                .collect();
+            window.update_with_buffer(&fb).unwrap();
+        }
     }
 }
