@@ -42,6 +42,15 @@ impl Cpu {
         self.ram.load(PROGRAM_START, &data);
     }
 
+    pub fn timer_tick(&mut self) {
+        if self.DT > 0 {
+            self.DT -= 1;
+        }
+        if self.ST > 0 {
+            self.ST -= 1;
+        }
+    }
+
     pub fn execute(&mut self) {
         use decoder::Instruction::*;
 
@@ -111,6 +120,14 @@ impl Cpu {
                 }
             }
 
+            // ---- Timer ---- //
+            LoadDTVx(v) => {
+                self.DT = self.V[v];
+            }
+            LoadVxDT(v) => {
+                self.V[v] = self.DT;
+            }
+
             // ---- Arithmetic ---- //
             AddVxByte(v, byte) => {
                 // this instruction does not set VF as carry
@@ -145,6 +162,9 @@ impl Cpu {
             }
 
             // ---- Display ---- //
+            ClearDisplay => {
+                self.gpu.clear();
+            }
             DisplaySpriteVxVyNibble(vx, vy, nbytes) => {
                 let lines = nbytes as usize;
                 // TODO: get rid of copy (slice into memory)

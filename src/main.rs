@@ -25,7 +25,8 @@ fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
 
 fn main() {
     //let rom_data = load_rom("./roms/demos/Maze_David_Winter_199x.ch8");
-    let rom_data = load_rom("./roms/demos/Particle_Demo_zeroZshadow_2008.ch8");
+    //let rom_data = load_rom("./roms/demos/Particle_Demo_zeroZshadow_2008.ch8");
+    let rom_data = load_rom("./roms/demos/Trip8_Demo_2008_Revival_Studios.ch8");
 
     let mut cpu = cpu::Cpu::new(memory::Memory::new(), gpu::Gpu::new());
     cpu.load_rom(&rom_data);
@@ -55,13 +56,13 @@ fn main() {
         let now = Instant::now();
 
         if (now - f500hz_ref) > Duration::from_millis(2) {
-            cpu.execute();
             f500hz_ref = now;
+            cpu.execute();
         }
 
         if (now - f60hz_ref) > Duration::from_millis(16) {
-            // cpu timer tick
             f60hz_ref = now;
+            cpu.timer_tick();
         }
 
         if (now - f30hz_ref) > Duration::from_millis(32) {

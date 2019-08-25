@@ -36,6 +36,10 @@ impl Gpu {
         }
         collision
     }
+
+    pub fn clear(&mut self) {
+        self.fb.write(&[false; WIDTH * HEIGHT]);
+    }
 }
 
 impl AsRef<[bool]> for Gpu {
