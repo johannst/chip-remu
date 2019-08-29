@@ -51,7 +51,7 @@ impl Cpu {
         }
     }
 
-    pub fn execute(&mut self) {
+    pub fn execute(&mut self, keys: Vec<u8>) {
         use decoder::Instruction::*;
 
         let instr_raw =
@@ -127,6 +127,9 @@ impl Cpu {
             LoadVxDT(v) => {
                 self.V[v] = self.DT;
             }
+            LoadSTVx(v) => {
+                self.ST = self.V[v];
+            }
 
             // ---- Arithmetic ---- //
             AddVxByte(v, byte) => {
@@ -139,6 +142,11 @@ impl Cpu {
             }
             AddIVx(v) => {
                 self.I += self.V[v] as u16;
+            }
+            SubVxVy(vx, vy) => {
+                //If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+                self.V[15] = (self.V[vx] > self.V[vy]) as u8; // VF as carry
+                self.V[vx] = self.V[vx].wrapping_sub(self.V[vy]);
             }
 
             // ---- Bit Operations ---- ///
@@ -154,6 +162,9 @@ impl Cpu {
                 // VF = Vx[0]
                 self.V[15] = (self.V[v] & 0x01) as u8;
                 self.V[v] >>= 1;
+            }
+            XorVxVy(vx, vy) => {
+                self.V[vx] ^= self.V[vy];
             }
 
             // ---- Rand ----//
@@ -177,6 +188,18 @@ impl Cpu {
                     self.V[vy] as usize,
                     &sprite[0..lines],
                 ) == gpu::Collision::Collision) as u8;
+            }
+
+            // ---- Key Input ---- //
+            SkipKeyPressedVx(v) => {
+                if keys.contains(&self.V[v]) == true {
+                    self.PC += 2;
+                }
+            }
+            SkipKeyNotPressedVx(v) => {
+                if keys.contains(&self.V[v]) == false {
+                    self.PC += 2;
+                }
             }
 
             _ => {
