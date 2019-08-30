@@ -4,6 +4,15 @@
 
 This is a Chip8 emulator I am going to write in rust in my spare time.
 
+![demo](demo.png)
+
+### build and start the emulator
+
+```rust
+cargo build --release
+./target/release/chip8-remu roms/demos/Zero_Demo_zeroZshadow_2007.ch8
+```
+
 ### License
 
 This project is licensed under [MIT](./LICENSE) license.
