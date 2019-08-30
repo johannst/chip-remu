@@ -220,7 +220,13 @@ impl Cpu {
         println!("DT: {:02x}    ST: {:02x}", self.DT, self.ST);
         println!("I : {:04x}", self.I);
         println!("PC: {:04x}", self.PC);
-        //println!("SP: {:02x}", self.SP);
+        for (i, val) in self.SP.iter().rev().enumerate() {
+            if i == 0 {
+                println!("SP: {:04x}", val);
+            } else {
+                println!("    {:04x}", val);
+            }
+        }
         println!("-------------------");
     }
 }
