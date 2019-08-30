@@ -35,24 +35,38 @@ fn remap_keys(keys: Vec<Key>) -> Vec<u8> {
         .collect::<Vec<u8>>()
 }
 
-fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
+fn load_rom_file<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, String> {
     println!("[+] using ROM file: {}", path.as_ref().to_str().unwrap());
-    let mut rom = File::open(&path).expect("Failed to open ROM file!");
+    match File::open(&path) {
+        Ok(mut file) => {
+            let mut rom_data = Vec::new();
+            match file.read_to_end(&mut rom_data) {
+                Ok(rom_len) => {
+                    println!("[+] read ROM {}bytes", rom_len);
+                    Ok(rom_data)
+                }
+                Err(_) => Err("Failed to read tom file!".to_string()),
+            }
+        }
+        Err(_) => Err("Failed to open rom file!".to_string()),
+    }
+}
 
-    let mut rom_data = Vec::new();
-    let rom_len = rom
-        .read_to_end(&mut rom_data)
-        .expect("Failed to read ROM file!");
-    println!("[+] read ROM {}bytes", rom_len);
-    rom_data
+fn load_rom_from_disk() -> Result<Vec<u8>, String> {
+    match std::env::args().nth(1) {
+        Some(p) => load_rom_file(p),
+        None => Err(format!("Use as {} <rom>", std::env::args().nth(0).unwrap())),
+    }
 }
 
 fn main() {
-    //let rom_data = load_rom("./roms/demos/Maze_David_Winter_199x.ch8");
-    //let rom_data = load_rom("./roms/demos/Particle_Demo_zeroZshadow_2008.ch8");
-    //let rom_data = load_rom("./roms/demos/Trip8_Demo_2008_Revival_Studios.ch8");
-    //let rom_data = load_rom("./roms/demos/Zero_Demo_zeroZshadow_2007.ch8");
-    let rom_data = load_rom("./roms/games/Space_Invaders_David_Winter.ch8");
+    let rom_data = match load_rom_from_disk() {
+        Ok(rom) => rom,
+        Err(e) => {
+            eprintln!("FAILED: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let mut cpu = cpu::Cpu::new(memory::Memory::new(), gpu::Gpu::new());
     cpu.load_rom(&rom_data);
