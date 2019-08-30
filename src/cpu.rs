@@ -134,7 +134,7 @@ impl Cpu {
                 self.ram.write_byte(self.I + 2, v % 10);
             }
             LoadSpriteAddrVx(v) => {
-                println!("unimplemented instruction {:#x} {:?}", instr_raw, instr);
+                self.I = self.V[v] as u16 * 5;
             }
 
             // ---- Timer ---- //
