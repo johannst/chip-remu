@@ -79,6 +79,9 @@ impl Cpu {
             Jump(addr) => {
                 self.PC = addr;
             }
+            JumpV0Addr(addr) => {
+                self.PC = self.V[0] as u16 + addr;
+            }
             Call(addr) => {
                 self.SP.push(self.PC);
                 self.PC = addr;
@@ -88,13 +91,18 @@ impl Cpu {
                     self.PC += 2;
                 }
             }
+            SkipNeqVxByte(v, byte) => {
+                if self.V[v] != byte {
+                    self.PC += 2;
+                }
+            }
             SkipEqVxVy(vx, vy) => {
                 if self.V[vx] == self.V[vy] {
                     self.PC += 2;
                 }
             }
-            SkipNeqVxByte(v, byte) => {
-                if self.V[v] != byte {
+            SkipNeqVxVy(vx, vy) => {
+                if self.V[vx] != self.V[vy] {
                     self.PC += 2;
                 }
             }
@@ -118,6 +126,15 @@ impl Cpu {
                 for vi in 0..v + 1 {
                     self.V[vi] = self.ram.read_byte(self.I + vi as u16);
                 }
+            }
+            LoadBVx(v) => {
+                let v = self.V[v];
+                self.ram.write_byte(self.I, v / 100);
+                self.ram.write_byte(self.I + 1, (v / 10) % 10);
+                self.ram.write_byte(self.I + 2, v % 10);
+            }
+            LoadSpriteAddrVx(v) => {
+                println!("unimplemented instruction {:#x} {:?}", instr_raw, instr);
             }
 
             // ---- Timer ---- //
@@ -148,6 +165,12 @@ impl Cpu {
                 self.V[15] = (self.V[vx] > self.V[vy]) as u8; // VF as carry
                 self.V[vx] = self.V[vx].wrapping_sub(self.V[vy]);
             }
+            SubnVxVy(vx, vy) => {
+                // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+                self.V[15] = (self.V[vy] > self.V[vx]) as u8; // VF as carry
+                self.V[vx] = self.V[vy].wrapping_sub(self.V[vx]);
+
+            }
 
             // ---- Bit Operations ---- ///
             AndVxVy(vx, vy) => {
@@ -165,6 +188,9 @@ impl Cpu {
             }
             XorVxVy(vx, vy) => {
                 self.V[vx] ^= self.V[vy];
+            }
+            OrVxVy(vx, vy) => {
+                self.V[vx] |= self.V[vy];
             }
 
             // ---- Rand ----//
@@ -201,10 +227,12 @@ impl Cpu {
                     self.PC += 2;
                 }
             }
-
-            _ => {
-                println!("unimplemented instruction {:#x} {:?}", instr_raw, instr);
-                unimplemented!();
+            LoadVxKey(v) => {
+                if keys.is_empty() {
+                    self.PC -= 2;
+                } else {
+                    self.V[v] = keys[0];
+                }
             }
         }
     }
