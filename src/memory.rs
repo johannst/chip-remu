@@ -21,7 +21,6 @@ impl Memory {
 
         let mut mem = [0u8; 4096];
         mem[0..sprites.len()].copy_from_slice(&sprites);
-        dbg!(&mem[0..10]);
 
         Memory { mem: mem }
     }
