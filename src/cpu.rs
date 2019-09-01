@@ -4,6 +4,14 @@ use super::memory;
 
 const PROGRAM_START: u16 = 0x200;
 
+#[derive(PartialEq)]
+enum PCOp {
+    Inc,
+    Stay,
+    SkipNext,
+    JumpAddr(u16),
+}
+
 #[allow(non_snake_case)]
 pub struct Cpu {
     V: [u8; 16],
@@ -61,49 +69,44 @@ impl Cpu {
             None => panic!("UNKNOWN INSTRUCTION"),
         };
 
-        if self.PC == self.prev_PC {
-            return;
-        }
-        self.prev_PC = self.PC;
-        self.PC += 2;
-
+        let mut pc_op = PCOp::Inc;
         match instr {
             // ---- Flow Control ---- //
             Return => {
                 if let Some(ret) = self.SP.pop() {
-                    self.PC = ret;
+                    pc_op = PCOp::JumpAddr(ret);
                 } else {
                     panic!("BUG: cpu execute RET instruction while stack is empty!");
                 }
             }
             Jump(addr) => {
-                self.PC = addr;
+                pc_op = PCOp::JumpAddr(addr);
             }
             JumpV0Addr(addr) => {
-                self.PC = self.V[0] as u16 + addr;
+                pc_op = PCOp::JumpAddr(self.V[0] as u16 + addr);
             }
             Call(addr) => {
-                self.SP.push(self.PC);
-                self.PC = addr;
+                self.SP.push(self.PC + 2); // push addr of next instr
+                pc_op = PCOp::JumpAddr(addr);
             }
             SkipEqVxByte(v, byte) => {
                 if self.V[v] == byte {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
             SkipNeqVxByte(v, byte) => {
                 if self.V[v] != byte {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
             SkipEqVxVy(vx, vy) => {
                 if self.V[vx] == self.V[vy] {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
             SkipNeqVxVy(vx, vy) => {
                 if self.V[vx] != self.V[vy] {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
 
@@ -219,21 +222,35 @@ impl Cpu {
             // ---- Key Input ---- //
             SkipKeyPressedVx(v) => {
                 if keys.contains(&self.V[v]) == true {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
             SkipKeyNotPressedVx(v) => {
                 if keys.contains(&self.V[v]) == false {
-                    self.PC += 2;
+                    pc_op = PCOp::SkipNext;
                 }
             }
             LoadVxKey(v) => {
                 if keys.is_empty() {
-                    self.PC -= 2;
+                    pc_op = PCOp::Stay;
                 } else {
                     self.V[v] = keys[0];
                 }
             }
+        }
+
+        if self.PC == self.prev_PC {
+            panic!("BUG: cpu stuck at {:04x}", self.PC);
+        }
+        if pc_op != PCOp::Stay {
+            self.prev_PC = self.PC;
+        }
+
+        match pc_op {
+            PCOp::Inc => { self.PC += 2; }
+            PCOp::SkipNext => { self.PC += 4; }
+            PCOp::Stay => {}
+            PCOp::JumpAddr(a) => { self.PC = a; }
         }
     }
 
