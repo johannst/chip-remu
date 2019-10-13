@@ -86,34 +86,79 @@ fn main() {
         panic!("{}", e);
     });
 
-    window.set_position(64, 64);
-
     let mut f500hz_ref = Instant::now();
     let mut f60hz_ref = Instant::now();
     let mut f30hz_ref = Instant::now();
 
+    #[derive(Debug)]
+    enum RunMode {
+        FreeRunning,
+        Stepping,
+    }
+    let mut run_mode = RunMode::Stepping;
+
+    println!("[+] RunMode: {:?}", run_mode);
+    println!("[+] Change RunMode with 'G' | 'B'");
+    println!("    'G': FreeRunning");
+    println!("    'B': Stepping");
+    println!("[+] In Stepping mode use 'SPACE' to step one instruction");
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        let now = Instant::now();
+        window.update();
+        window
+            .get_keys_pressed(minifb::KeyRepeat::No)
+            .unwrap()
+            .iter()
+            .for_each(|&k| match k {
+                Key::B => {
+                    run_mode = RunMode::Stepping;
+                    println!("switching RunMode: {:?}", run_mode);
+                }
+                Key::G => {
+                    run_mode = RunMode::FreeRunning;
+                    println!("switching RunMode: {:?}", run_mode);
+                }
+                _ => {}
+            });
 
-        if (now - f500hz_ref) > Duration::from_millis(2) {
-            f500hz_ref = now;
-            cpu.execute(remap_keys(window.get_keys().unwrap_or_default()));
-        }
+        match run_mode {
+            RunMode::FreeRunning => {
+                let now = Instant::now();
 
-        if (now - f60hz_ref) > Duration::from_millis(16) {
-            f60hz_ref = now;
-            cpu.timer_tick();
-        }
+                if (now - f500hz_ref) > Duration::from_millis(2) {
+                    f500hz_ref = now;
+                    cpu.execute(remap_keys(window.get_keys().unwrap_or_default()));
+                }
 
-        if (now - f30hz_ref) > Duration::from_millis(32) {
-            f30hz_ref = now;
-            // expensive copy, could be cleaned up
-            let fb: Vec<u32> = cpu
-                .get_fb()
-                .iter()
-                .map(|&pixel| 0x00ffffff * pixel as u32)
-                .collect();
-            window.update_with_buffer(&fb).unwrap();
+                if (now - f60hz_ref) > Duration::from_millis(16) {
+                    f60hz_ref = now;
+                    cpu.timer_tick();
+                }
+
+                if (now - f30hz_ref) > Duration::from_millis(32) {
+                    f30hz_ref = now;
+                    // expensive copy, could be cleaned up
+                    let fb: Vec<u32> = cpu
+                        .get_fb()
+                        .iter()
+                        .map(|&pixel| 0x00ffffff * pixel as u32)
+                        .collect();
+                    window.update_with_buffer(&fb).unwrap();
+                }
+            }
+            RunMode::Stepping => {
+                if (window.is_key_pressed(Key::Space, minifb::KeyRepeat::No)) {
+                    cpu.execute(remap_keys(window.get_keys().unwrap_or_default()));
+                    cpu.timer_tick();
+
+                    let fb: Vec<u32> = cpu
+                        .get_fb()
+                        .iter()
+                        .map(|&pixel| 0x00ffffff * pixel as u32)
+                        .collect();
+                    window.update_with_buffer(&fb).unwrap();
+                }
+            }
         }
     }
 }
