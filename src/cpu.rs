@@ -59,6 +59,19 @@ impl Cpu {
         }
     }
 
+    pub fn get_next_n_instr(&self, n: usize) -> std::vec::Vec<u16> {
+        let mut instrs = Vec::with_capacity(n * std::mem::size_of::<u16>());
+        let mut offset = 0;
+        for _ in 0..n {
+            instrs.push(u16::from_be_bytes([
+                self.ram.read_byte(self.PC + offset),
+                self.ram.read_byte(self.PC + 1 + offset),
+            ]));
+            offset += 2;
+        }
+        instrs
+    }
+
     pub fn execute(&mut self, keys: Vec<u8>) {
         use decoder::Instruction::*;
 
@@ -68,12 +81,6 @@ impl Cpu {
             Some(instr) => instr,
             None => panic!("UNKNOWN INSTRUCTION"),
         };
-
-        println!(
-            "{:04x}: {}",
-            instr_raw,
-            decoder::disassemble(instr_raw).unwrap()
-        );
 
         let mut pc_op = PCOp::Inc;
         match instr {
@@ -284,5 +291,35 @@ impl Cpu {
             }
         }
         println!("-------------------");
+    }
+
+    pub fn dump_to_vec_str(&self) -> std::vec::Vec<String> {
+        let mut state = Vec::new();
+        state.push(format!("---- CPU STATE ----"));
+        for i in 0..4 {
+            let i = 4 * i;
+            state.push(format!(
+                "V{:X}: {:02X}   V{:X}: {:02X}  V{:X}: {:02X}  V{:X}: {:02X}",
+                i,
+                self.V[i],
+                i + 1,
+                self.V[i + 1],
+                i + 2,
+                self.V[i + 2],
+                i + 3,
+                self.V[i + 3]
+            ));
+        }
+        state.push(format!("DT: {:02X}   ST: {:02X}", self.DT, self.ST));
+        state.push(format!("I : {:04X}", self.I));
+        state.push(format!("PC: {:04X}", self.PC));
+        for (i, val) in self.SP.iter().rev().enumerate() {
+            if i == 0 {
+                state.push(format!("SP: {:04X}", val));
+            } else {
+                state.push(format!("    {:04X}", val));
+            }
+        }
+        state
     }
 }

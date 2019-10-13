@@ -274,7 +274,7 @@ pub fn decode(instr: u16) -> Option<Instruction> {
     }
 }
 
-pub fn disassemble(instr: u16) -> Option<String> {
+pub fn disassemble(instr: u16) -> String {
     match CHIP8_INSTRUCTIONS
         .iter()
         .find(|i| (instr & i.mask) == i.opcode)
@@ -327,12 +327,9 @@ pub fn disassemble(instr: u16) -> Option<String> {
                 0xf065 => format!("LD V{:1x}, [I]", vx),
                 _ => unreachable!(),
             };
-            Some(disasm)
+            disasm
         }
-        None => {
-            eprintln!("Failed to decode, unknown instruction (0x{:04x})", instr);
-            None
-        }
+        None => String::from("NO DISASM"),
     }
 }
 
