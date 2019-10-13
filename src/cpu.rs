@@ -172,7 +172,6 @@ impl Cpu {
                 // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
                 self.V[15] = (self.V[vy] > self.V[vx]) as u8; // VF as carry
                 self.V[vx] = self.V[vy].wrapping_sub(self.V[vx]);
-
             }
 
             // ---- Bit Operations ---- ///
@@ -247,10 +246,16 @@ impl Cpu {
         }
 
         match pc_op {
-            PCOp::Inc => { self.PC += 2; }
-            PCOp::SkipNext => { self.PC += 4; }
+            PCOp::Inc => {
+                self.PC += 2;
+            }
+            PCOp::SkipNext => {
+                self.PC += 4;
+            }
             PCOp::Stay => {}
-            PCOp::JumpAddr(a) => { self.PC = a; }
+            PCOp::JumpAddr(a) => {
+                self.PC = a;
+            }
         }
     }
 
