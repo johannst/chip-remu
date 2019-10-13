@@ -274,6 +274,68 @@ pub fn decode(instr: u16) -> Option<Instruction> {
     }
 }
 
+pub fn disassemble(instr: u16) -> Option<String> {
+    match CHIP8_INSTRUCTIONS
+        .iter()
+        .find(|i| (instr & i.mask) == i.opcode)
+    {
+        Some(InstructionCode { opcode, mask: _ }) => {
+            // field access helper
+            let vx = ((instr & 0x0f00) >> 8) as usize;
+            let vy = ((instr & 0x00f0) >> 4) as usize;
+            let nnn = instr & 0x0fff;
+            let nn = (instr & 0x00ff) as u8;
+            let n = (instr & 0x000f) as u8;
+
+            // Mnemonic based on
+            // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+            use Instruction::*;
+            let disasm = match opcode {
+                0x00e0 => format!("CLS"),
+                0x00ee => format!("RET"),
+                0x1000 => format!("JP {:04x}", nnn),
+                0x2000 => format!("CALL {:04x}", nnn),
+                0x3000 => format!("SE V{:1x}, {:02x}", vx, nn),
+                0x4000 => format!("SNE V{:1x}, {:02x}", vx, nn),
+                0x5000 => format!("SE V{:1x}, V{:1x}", vx, vy),
+                0x6000 => format!("LD V{:1x}, {:02x}", vx, nn),
+                0x7000 => format!("ADD V{:1x}, {:02x}", vx, nn),
+                0x8000 => format!("LD V{:1x}, V{:1x}", vx, vy),
+                0x8001 => format!("OR V{:1x}, V{:1x}", vx, vy),
+                0x8002 => format!("AND V{:1x}, V{:1x}", vx, vy),
+                0x8003 => format!("XOR V{:1x}, V{:1x}", vx, vy),
+                0x8004 => format!("ADD V{:1x}, V{:1x}", vx, vy),
+                0x8005 => format!("SUB V{:1x}, V{:1x}", vx, vy),
+                0x8006 => format!("SHR V{:1x}", vx),
+                0x8007 => format!("SUBN V{:1x}, V{:1x}", vx, vy),
+                0x800e => format!("SHL {:1x}", vx),
+                0x9000 => format!("SNE V{:1x}, V{:1x}", vx, vy),
+                0xa000 => format!("LD I, {:04x}", nnn),
+                0xb000 => format!("JP V0, {:04x}", nnn),
+                0xc000 => format!("RND V{:1x}, {:04x}", vx, nn),
+                0xd000 => format!("DRW V{:1x}, V{:1x}, {:1x}", vx, vy, n),
+                0xe09e => format!("SKP V{:1x}", vx),
+                0xe0a1 => format!("SKNP V{:1x}", vx),
+                0xf007 => format!("LD V{:1x}, DT", vx),
+                0xf00a => format!("LD V{:1x}, K", vx),
+                0xf015 => format!("LD DT, V{:1x}", vx),
+                0xf018 => format!("LD ST, V{:1x}", vx),
+                0xf01e => format!("ADD I, V{:1x}", vx),
+                0xf029 => format!("LD F, V{:1x}", vx),
+                0xf033 => format!("LD B, V{:1x}", vx),
+                0xf055 => format!("LD [I], V{:1x}", vx),
+                0xf065 => format!("LD V{:1x}, [I]", vx),
+                _ => unreachable!(),
+            };
+            Some(disasm)
+        }
+        None => {
+            eprintln!("Failed to decode, unknown instruction (0x{:04x})", instr);
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod unittest {
     use super::*;

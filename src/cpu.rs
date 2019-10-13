@@ -69,6 +69,12 @@ impl Cpu {
             None => panic!("UNKNOWN INSTRUCTION"),
         };
 
+        println!(
+            "{:04x}: {}",
+            instr_raw,
+            decoder::disassemble(instr_raw).unwrap()
+        );
+
         let mut pc_op = PCOp::Inc;
         match instr {
             // ---- Flow Control ---- //
