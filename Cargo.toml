@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 rand = "0.7"
 minifb = "0.11"
-pixel_engine = { git = "https://github.com/johannst/pixel_engine" }
+pixel_engine = { git = "https://github.com/johannst/pixel_engine", branch = "test/const-generic" }

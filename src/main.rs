@@ -75,8 +75,8 @@ fn main() {
 
     let mut window = Window::new(
         "CHIP-8 - ESC to exit",
-        640,
-        280,
+        500,
+        400,
         WindowOptions {
             borderless: false,
             title: true,
@@ -105,7 +105,7 @@ fn main() {
     println!("    'B': Stepping");
     println!("[+] In Stepping mode use 'SPACE' to step one instruction");
 
-    let mut fb = pixel_engine::PixelVec::new(640, 280);
+    let mut fb = pixel_engine::PixelVec::new(500, 400);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         window
@@ -161,34 +161,22 @@ fn main() {
         }
 
         if draw_dbg {
-            let mut y = 0;
-            for (c, &instr) in cpu.get_next_n_instr(15).iter().enumerate() {
-                let disasm = decoder::disassemble(instr).to_ascii_uppercase();
+            // clear screen
+            pixel_engine::draw_rect(&mut fb, 4 * gpu::WIDTH + 22, 0, 200, 400, 0x00000000);
 
-                for x in 0..32 {
-                    pixel_engine::draw_pixel_with_scale(
-                        &mut fb,
-                        4 * gpu::WIDTH + 50 + x * 8,
-                        y + c * 8,
-                        0x0,
-                        pixel_engine::PixelScale::X8,
-                    );
-                }
-                pixel_engine::draw_str(&mut fb, 4 * gpu::WIDTH + 50, y + c * 8, disasm.as_str());
+            for (c, &instr) in cpu.get_next_n_instr(10).iter().enumerate() {
+                let disasm = decoder::disassemble(instr).to_ascii_uppercase();
+                pixel_engine::draw_str(&mut fb, 4 * gpu::WIDTH + 22, c * 12, disasm.as_str());
             }
 
-            y = 16 * 8;
+            let y_offset = 10 * 12;
             for (c, state) in cpu.dump_to_vec_str().iter().enumerate() {
-                for x in 0..32 {
-                    pixel_engine::draw_pixel_with_scale(
-                        &mut fb,
-                        4 * gpu::WIDTH + 50 + x * 8,
-                        y + c * 8,
-                        0x0,
-                        pixel_engine::PixelScale::X8,
-                    );
-                }
-                pixel_engine::draw_str(&mut fb, 4 * gpu::WIDTH + 50, y + 8 * c, state.as_str());
+                pixel_engine::draw_str(
+                    &mut fb,
+                    4 * gpu::WIDTH + 22,
+                    y_offset + 12 * c,
+                    state.as_str(),
+                );
             }
         }
 
