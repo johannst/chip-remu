@@ -2,11 +2,11 @@
 
 [![Build Status](https://travis-ci.org/johannst/chip-remu.svg?branch=master)](https://travis-ci.org/johannst/chip-remu)
 
-This is a Chip8 emulator I am going to write in rust in my spare time.
+This is a Chip8 emulator I wrote for fun to get started with rust.
 
 ![demo](demo.png)
 
-### build and start the emulator
+### Build and start the emulator
 
 ```rust
 cargo build --release
@@ -18,7 +18,6 @@ The emulator can run in two different operation modes
 - `FreeRunning` to let the CPU run automatically
 
 ### Keymap
-
 
 Chip8 input keys in the format `chip8_key(physical_key)`:
 
