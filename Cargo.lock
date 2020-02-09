@@ -34,7 +34,7 @@ name = "chip8-remu"
 version = "0.1.0"
 dependencies = [
  "minifb 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pixel_engine 0.1.0 (git+https://github.com/johannst/pixel_engine?branch=test/const-generic)",
+ "pixel_engine 0.1.0 (git+https://github.com/johannst/pixel_engine)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -158,7 +158,7 @@ dependencies = [
 [[package]]
 name = "pixel_engine"
 version = "0.1.0"
-source = "git+https://github.com/johannst/pixel_engine?branch=test/const-generic#f5357661a7d4611fa3b920b8a0172c628c3c8b6d"
+source = "git+https://github.com/johannst/pixel_engine#58ad20d4c01601fd99a089dfdbfbbd6a8d8a8bcf"
 dependencies = [
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -424,7 +424,7 @@ dependencies = [
 "checksum num-iter 0.1.39 (registry+https://github.com/rust-lang/crates.io-index)" = "76bd5272412d173d6bf9afdf98db8612bbabc9a7a830b7bfc9c188911716132e"
 "checksum num-traits 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "6ba9a427cfca2be13aa6f6403b0b7e7368fe982bfa16fccc450ce74c46cd9b32"
 "checksum orbclient 0.3.27 (registry+https://github.com/rust-lang/crates.io-index)" = "f8b18f57ab94fbd058e30aa57f712ec423c0bb7403f8493a6c58eef0c36d9402"
-"checksum pixel_engine 0.1.0 (git+https://github.com/johannst/pixel_engine?branch=test/const-generic)" = "<none>"
+"checksum pixel_engine 0.1.0 (git+https://github.com/johannst/pixel_engine)" = "<none>"
 "checksum pkg-config 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)" = "72d5370d90f49f70bd033c3d75e87fc529fbfff9d6f7cccef07d6170079d91ea"
 "checksum ppv-lite86 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e3cbf9f658cdb5000fcf6f362b8ea2ba154b9f146a61c7a20d647034c6b6561b"
 "checksum rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6d71dacdc3c88c1fde3885a3be3fbab9f35724e6ce99467f7d9c5026132184ca"

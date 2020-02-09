@@ -75,8 +75,8 @@ fn main() {
 
     let mut window = Window::new(
         "CHIP-8 - ESC to exit",
-        500,
-        400,
+        640,
+        480,
         WindowOptions {
             borderless: false,
             title: true,
@@ -105,7 +105,7 @@ fn main() {
     println!("    'B': Stepping");
     println!("[+] In Stepping mode use 'SPACE' to step one instruction");
 
-    let mut fb = pixel_engine::PixelVec::new(500, 400);
+    let mut fb = pixel_engine::PixelVec::new(640, 480);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         window
@@ -148,7 +148,7 @@ fn main() {
                 }
             }
             RunMode::Stepping => {
-                if (window.is_key_pressed(Key::Space, minifb::KeyRepeat::Yes)) {
+                if window.is_key_pressed(Key::Space, minifb::KeyRepeat::Yes) {
                     cpu.execute(remap_keys(window.get_keys().unwrap_or_default()));
                     cpu.timer_tick();
 
@@ -162,11 +162,11 @@ fn main() {
 
         if draw_dbg {
             // clear screen
-            pixel_engine::draw_rect(&mut fb, 4 * gpu::WIDTH + 22, 0, 200, 400, 0x00000000);
+            pixel_engine::draw_rect(&mut fb, 4 * gpu::WIDTH + 22, 0, 0x00000000, 200, 400);
 
             for (c, &instr) in cpu.get_next_n_instr(10).iter().enumerate() {
                 let disasm = decoder::disassemble(instr).to_ascii_uppercase();
-                pixel_engine::draw_str(&mut fb, 4 * gpu::WIDTH + 22, c * 12, disasm.as_str());
+                pixel_engine::draw_str(&mut fb, 4 * gpu::WIDTH + 22, c * 12, 0x00ffffff, disasm.as_str());
             }
 
             let y_offset = 10 * 12;
@@ -175,6 +175,7 @@ fn main() {
                     &mut fb,
                     4 * gpu::WIDTH + 22,
                     y_offset + 12 * c,
+                    0x00ffffff,
                     state.as_str(),
                 );
             }
@@ -183,8 +184,8 @@ fn main() {
         if draw_fb {
             for y in 0..gpu::HEIGHT {
                 for x in 0..gpu::WIDTH {
-                    let pixel = cpu.get_fb()[y * gpu::WIDTH + x] as u32 * 0x00ffffff;
-                    pixel_engine::draw_pixel_with_scale(
+                    let pixel = cpu.get_fb()[y * gpu::WIDTH + x] as u32 * 0x00ff0000;
+                    pixel_engine::draw_pixel_scaled(
                         &mut fb,
                         x * 4,
                         y * 4,

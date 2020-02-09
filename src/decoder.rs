@@ -289,7 +289,6 @@ pub fn disassemble(instr: u16) -> String {
 
             // Mnemonic based on
             // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-            use Instruction::*;
             let disasm = match opcode {
                 0x00e0 => format!("CLS"),
                 0x00ee => format!("RET"),
